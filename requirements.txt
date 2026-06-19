@@ -1,3 +1,5 @@
-pytelegrambotapi
+pyTelegramBotAPI
 google-generativeai
-gtts
+flask
+elevenlabs
+pydub
