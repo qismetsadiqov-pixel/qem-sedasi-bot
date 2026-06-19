@@ -1,15 +1,14 @@
 import telebot
-import google.generativeai as genai
 import os
+from gtts import gTTS
+from telebot import types
+import google.generativeai as genai
 
-# Telegram Bot Tokenin
-TELEGRAM_TOKEN = "8620051118:AAH59PC86q3yv--9SFHnue7q6ejEb0xLIf0"
+# Açarın gizli olması üçün mühit dəyişənlərindən oxuyuruq
+TOKEN = os.environ.get('TELEGRAM_TOKEN')
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 
-# Gemini API Açarın (Bunu aistudio.google.com-dan alıb aşağıya yapışdır)
-GEMINI_API_KEY = "8620051118:AAH59PC86q3yv--9SFHnue7q6ejEb0xLIf0"
-
-
-bot = telebot.TeleBot(TELEGRAM_TOKEN)
+bot = telebot.TeleBot(TOKEN)
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-pro')
 
@@ -17,8 +16,25 @@ model = genai.GenerativeModel('gemini-pro')
 def handle_message(message):
     try:
         response = model.generate_content(message.text)
-        bot.reply_to(message, response.text)
+        text_content = response.text
+        bot.reply_to(message, text_content)
+        
+        # Səs faylı yaratmaq üçün düymə
+        markup = types.InlineKeyboardMarkup()
+        btn = types.InlineKeyboardButton("MP3 kimi göndər", callback_data="audio")
+        markup.add(btn)
+        
+        bot.last_text = text_content
+        bot.send_message(message.chat.id, "Səsli dinləmək istəyirsiniz?", reply_markup=markup)
     except Exception as e:
-        bot.reply_to(message, "Bir xəta baş verdi: " + str(e))
+        bot.reply_to(message, "Xəta: " + str(e))
+
+@bot.callback_query_handler(func=lambda call: call.data == "audio")
+def callback_query(call):
+    tts = gTTS(text=bot.last_text, lang='az')
+    tts.save("ses.mp3")
+    with open("ses.mp3", "rb") as audio:
+        bot.send_audio(call.message.chat.id, audio)
+    os.remove("ses.mp3")
 
 bot.polling()
