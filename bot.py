@@ -51,9 +51,8 @@ def callback(call):
         bot.answer_callback_query(call.id, f"{call.data} ilə oxunur...")
         audio = client.generate(text=user_texts[call.message.chat.id], voice=voices[call.data])
         bot.send_audio(call.message.chat.id, audio)
-
 if __name__ == "__main__":
-        port = int(os.environ.get("PORT", 8080))
+    port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
 
-    # bot.polling()
+# bot.polling()
